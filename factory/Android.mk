@@ -43,7 +43,6 @@ define aml-logo-img
 	$(hide) rm -rf $(PRODUCT_UPGRADE_OUT)/logo
 endef
 
-INSTALLED_AML_UPGRADE_PACKAGE_TARGET := $(PRODUCT_OUT)/aml_upgrade_package.img
 $(INSTALLED_AML_UPGRADE_PACKAGE_TARGET) : $(INTERNAL_OTA_PACKAGE_TARGET) $(AML_IMAGE_TOOL) (IMGPACK) | $(ACP)
 	$(hide) mkdir -p $(PRODUCT_UPGRADE_OUT)
 ifeq ("$(wildcard $(LOCAL_PATH)/u-boot.bin)","")
@@ -51,7 +50,7 @@ ifeq ("$(wildcard $(LOCAL_PATH)/u-boot.bin)","")
 else
 	$(hide) $(call aml-symlink-file, $(LOCAL_PATH)/u-boot.bin)
 endif
-ifeq ($(TARGET_AMLOGIC_RES_PACKAGE),)
+ifneq ($(TARGET_LOGO_FILES),)
 	$(hide) $(call aml-logo-img)
 	$(hide) $(call aml-symlink-file, $(PRODUCT_OUT)/logo.img)
 endif
