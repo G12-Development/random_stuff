@@ -14,10 +14,10 @@
 # limitations under the License.
 #
 
-LOCAL_PATH := $(call my-dir)
+FACTORY_PATH := device/askey/g12a-common/factory
 
 PRODUCT_UPGRADE_OUT := $(PRODUCT_OUT)/upgrade
-PACKAGE_CONFIG_FILE := $(LOCAL_PATH)/platform.conf
+PACKAGE_CONFIG_FILE := $(PRODUCT_UPGRADE_OUT)/image.cfg
 AML_IMAGE_TOOL := $(HOST_OUT_EXECUTABLES)/aml_image_packer$(HOST_EXECUTABLE_SUFFIX)
 IMGPACK := $(HOST_OUT_EXECUTABLES)/res_packer$(HOST_EXECUTABLE_SUFFIX)
 
@@ -26,7 +26,7 @@ INSTALLED_AML_LOGO := $(PRODUCT_OUT)/logo.img
 INSTALLED_AML_UPGRADE_PACKAGE_TARGET := $(PRODUCT_OUT)/aml_upgrade_package.img
 
 define aml-symlink-file
-	$(hide) ln -sf $(1) $(PRODUCT_UPGRADE_OUT)/$(if $(2), $(2), $(basename $(1)))
+	$(hide) ln -f $(1) $(PRODUCT_UPGRADE_OUT)/$(strip $(if $(2), $(2), $(notdir $(1))))
 endef
 
 define aml-logo-img
@@ -43,20 +43,22 @@ define aml-logo-img
 	$(hide) rm -rf $(PRODUCT_UPGRADE_OUT)/logo
 endef
 
-$(INSTALLED_AML_UPGRADE_PACKAGE_TARGET) : $(INTERNAL_OTA_PACKAGE_TARGET) $(AML_IMAGE_TOOL) (IMGPACK) | $(ACP)
+$(INSTALLED_AML_UPGRADE_PACKAGE_TARGET) : $(INTERNAL_OTA_PACKAGE_TARGET) | $(ACP)
 	$(hide) mkdir -p $(PRODUCT_UPGRADE_OUT)
-ifeq ("$(wildcard $(LOCAL_PATH)/u-boot.bin)","")
-	$(warning "no u-boot.bin found in $(LOCAL_PATH)")
+ifeq ("$(wildcard $(FACTORY_PATH)/u-boot.bin)","")
+	$(error "no u-boot.bin found in $(FACTORY_PATH)")
 else
-	$(hide) $(call aml-symlink-file, $(LOCAL_PATH)/u-boot.bin)
+	$(hide) $(call aml-symlink-file, $(FACTORY_PATH)/u-boot.bin)
 endif
-ifneq ($(TARGET_LOGO_FILES),)
+ifeq ($(TARGET_LOGO_FILES),)
+	$(error "please set TARGET_LOGO_FILES")
+else
 	$(hide) $(call aml-logo-img)
 	$(hide) $(call aml-symlink-file, $(PRODUCT_OUT)/logo.img)
 endif
-	$(hide) $(call aml-symlink-file, $(LOCAL_PATH)/aml_sdc_burn.ini)
-	$(hide) $(call aml-symlink-file, $(LOCAL_PATH)/image.cfg)
-	$(hide) $(call aml-symlink-file, $(LOCAL_PATH)/platform.conf)
+	$(hide) $(call aml-symlink-file, $(FACTORY_PATH)/aml_sdc_burn.ini)
+	$(hide) $(call aml-symlink-file, $(FACTORY_PATH)/image.cfg)
+	$(hide) $(call aml-symlink-file, $(FACTORY_PATH)/platform.conf)
 	$(hide) $(call aml-symlink-file, $(PRODUCT_OUT)/boot.img)
 	$(hide) $(call aml-symlink-file, $(PRODUCT_OUT)/recovery.img)
 	$(hide) $(call aml-symlink-file, $(INSTALLED_2NDBOOTLOADER_TARGET), dtb.img)
